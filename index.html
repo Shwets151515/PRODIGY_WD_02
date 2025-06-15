@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Interactive Stopwatch - Professional & Modern</title>
+<!-- Google Fonts: Lato and Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+<style>
+  /* Reset & base */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    font-family: 'Lato', sans-serif;
+    color: #2c3e50;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 50px 20px;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+
+  body.dark {
+    background: linear-gradient(135deg, #2c3e50 0%, #1a2533 100%);
+    color: #cbd5e1;
+  }
+
+  #app {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 38px 48px;
+    max-width: 480px;
+    width: 100%;
+    box-shadow:
+      0 8px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: visible;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body.dark #app {
+    background: #1f2937;
+    box-shadow:
+      0 8px 40px rgba(0,0,0,0.9);
+  }
+
+  h1 {
+    font-weight: 700;
+    font-size: 2.8rem;
+    margin-bottom: 32px;
+    text-align: center;
+    color: inherit;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Timer display card */
+  #timer {
+    font-weight: 900;
+    font-size: 4.8rem;
+    letter-spacing: 0.1em;
+    width: 100%;
+    max-width: 320px;
+    color: #111827;
+    background-color: #f9fafb;
+    border-radius: 16px;
+    padding: 0;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    box-shadow:
+      inset 5px 5px 15px #d1d5db,
+      inset -5px -5px 15px #ffffff;
+    margin-bottom: 36px;
+    user-select: text;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 6rem;
+    position: relative;
+    transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  body.dark #timer {
+    color: #e0e0e0;
+    background-color: #2e3a50;
+    box-shadow:
+      inset 5px 5px 15px #1c2734,
+      inset -5px -5px 15px #45586c;
+  }
+
+  /* Blinking indicator dot when running */
+  #timer::after {
+    content: "";
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    background: red;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 0 8px rgba(255,0,0,0.7);
+  }
+  #timer.running::after {
+    opacity: 1;
+    animation: blink 1.2s infinite ease-in-out;
+  }
+  @keyframes blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+  }
+
+
+  /* Controls container */
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 36px;
+  }
+
+  button {
+    all: unset;
+    cursor: pointer;
+    flex-grow: 1;
+    padding: 14px 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #ecf0f1;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.7);
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  button .material-icons {
+    font-size: 1.4rem;
+    line-height: 0;
+  }
+
+  button:hover:not(:disabled) {
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.9);
+    transform: translateY(-5px) scale(1.05);
+  }
+
+  button:focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 4px;
+  }
+
+  button:disabled {
+    cursor: default;
+    background: #9ca3af;
+    color: #d1d5db;
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* Laps container */
+  #laps {
+    width: 100%;
+    max-width: 320px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #f9fafb;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    padding: 16px 20px;
+    border: 1px solid #d6dbdf;
+    user-select: none;
+  }
+  body.dark #laps {
+    background-color: #2e3a50;
+    border-color: #1f2a3a;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.8);
+  }
+
+  #laps-label {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #34495e;
+    margin-bottom: 16px;
+  }
+  body.dark #laps-label {
+    color: #f0f5f9;
+  }
+
+  #laps ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  #laps ul li {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    user-select: text;
+    transition: background-color 0.3s ease;
+  }
+  body.dark #laps ul li {
+    background-color: #3a475a;
+    color: #c5d2df;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.4);
+  }
+
+  #laps ul li:last-child {
+    margin-bottom: 0;
+  }
+
+  #laps ul li:hover {
+    background-color: #d0d7de;
+  }
+  body.dark #laps ul li:hover {
+    background-color: #505f7a;
+  }
+
+  /* Scrollbar styling */
+  #laps ul::-webkit-scrollbar {
+    width: 7px;
+  }
+  #laps ul::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #laps ul::-webkit-scrollbar-thumb {
+    background-color: #2563eb;
+    border-radius: 10px;
+  }
+  body.dark #laps ul::-webkit-scrollbar-thumb {
+    background-color: #4b6cb7;
+  }
+
+  /* Dark mode toggle button */
+  #darkModeToggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: #2563eb;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+    font-family: 'Lato', sans-serif;
+    box-shadow: 0 3px 6px rgba(37, 99, 235, 0.7);
+    transition: background 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #darkModeToggle:hover {
+    background: #1e40af;
+  }
+  #darkModeToggle .material-icons {
+    font-size: 20px;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    #app {
+      max-width: 360px;
+      padding: 32px 36px;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 32px;
+    }
+    #timer {
+      font-size: 3.8rem;
+      max-width: 280px;
+      height: 5rem;
+      margin-bottom: 32px;
+    }
+    .controls {
+      max-width: 280px;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    button {
+      font-size: 1rem;
+      padding: 12px 0;
+    }
+    #laps {
+      max-width: 280px;
+      max-height: 180px;
+      padding: 12px 16px;
+    }
+    #laps-label {
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+    #laps ul li {
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+    #darkModeToggle {
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      top: 12px;
+      right: 12px;
+    }
+    #darkModeToggle .material-icons {
+      font-size: 18px;
+    }
+  }
+</style>
+</head>
+<body>
+  <button id="darkModeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span class="material-icons">dark_mode</span> Dark Mode
+  </button>
+  <main id="app" role="main" aria-label="Professional Stopwatch application">
+    <h1>Stopwatch</h1>
+    <div id="timer" role="timer" aria-live="off" aria-atomic="true">00:00.00</div>
+    <div class="controls" role="group" aria-label="Stopwatch controls">
+      <button id="startBtn" aria-label="Start stopwatch">
+        <span class="material-icons">play_arrow</span> Start
+      </button>
+      <button id="pauseBtn" aria-label="Pause stopwatch" disabled>
+        <span class="material-icons">pause</span> Pause
+      </button>
+      <button id="resetBtn" aria-label="Reset stopwatch" disabled>
+        <span class="material-icons">restart_alt</span> Reset
+      </button>
+    </div>
+    <section id="laps" aria-label="Lap times" hidden>
+      <div id="laps-label">Laps</div>
+      <ul id="lapsList" tabindex="0" aria-live="polite" aria-relevant="additions"></ul>
+    </section>
+  </main>
+
+<script>
+  (() => {
+    const body = document.body;
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    darkModeToggle.addEventListener('click', () => {
+      body.classList.toggle('dark');
+      if(body.classList.contains('dark')) {
+        darkModeToggle.innerHTML = '<span class="material-icons">light_mode</span> Light Mode';
+      } else {
+        darkModeToggle.innerHTML = '<span class="material-icons">dark_mode</span> Dark Mode';
+      }
+    });
+
+    const timerDisplay = document.getElementById('timer');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const lapsSection = document.getElementById('laps');
+    const lapsList = document.getElementById('lapsList');
+
+    let startTime = 0, elapsedTime = 0, timerInterval = null, running = false;
+    let lapTimes = [];
+
+    function formatTime(timeMs) {
+      let ms = timeMs % 1000;
+      let totalSeconds = Math.floor(timeMs / 1000);
+      let minutes = Math.floor(totalSeconds / 60);
+      let seconds = totalSeconds % 60;
+      return String(minutes).padStart(2,'0') + ':' + String(seconds).padStart(2,'0') + '.' + String(Math.floor(ms/10)).padStart(2,'0');
+    }
+
+    function updateTimer() {
+      elapsedTime = Date.now() - startTime;
+      timerDisplay.textContent = formatTime(elapsedTime);
+    }
+
+    function startTimer(){
+      if(!running){
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateTimer,10);
+        running = true;
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+        resetBtn.disabled = true;
+        timerDisplay.classList.add('running');
+      }
+    }
+
+    function pauseTimer(){
+      if(running){
+        clearInterval(timerInterval);
+        running = false;
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = false;
+        timerDisplay.classList.remove('running');
+      }
+    }
+
+    function resetTimer(){
+      clearInterval(timerInterval);
+      elapsedTime = 0;
+      timerDisplay.textContent = "00:00.00";
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = true;
+      lapTimes = [];
+      lapsList.innerHTML = '';
+      lapsSection.hidden = true;
+      timerDisplay.classList.remove('running');
+    }
+
+    startBtn.addEventListener('click', startTimer);
+    pauseBtn.addEventListener('click', pauseTimer);
+    resetBtn.addEventListener('click', resetTimer);
+
+    // Keyboard accessibility
+    document.addEventListener('keydown', (e)=>{
+      if(e.target.tagName.toLowerCase()==='input' || e.target.tagName.toLowerCase()==='textarea') return;
+      if(e.key===' ' || e.key==='Enter'){
+        if(document.activeElement===startBtn && !startBtn.disabled) startBtn.click();
+        else if(document.activeElement===pauseBtn && !pauseBtn.disabled) pauseBtn.click();
+        else if(document.activeElement===resetBtn && !resetBtn.disabled) resetBtn.click();
+      }
+    });
+  })();
+</script>
+</body>
+</html>
